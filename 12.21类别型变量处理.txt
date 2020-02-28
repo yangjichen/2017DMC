@@ -1,0 +1,14 @@
+类别型变量处理：
+Pid:有很多方法
+manufacter：暂时想不到有什么
+group：切割一下非常有意义
+content：把有乘法的项先处理了
+unit：使用同一量级单位
+pharmForm:想不到
+genericProduct：使用01变量已经足够
+sale index:只有4类
+availability:只有4类
+
+click basket order这三个可以使用，通过统计不同pid的药品这三类情况出现的次数
+
+这群人竟然用了clusting方法去给药品聚类，丧心病狂！！！

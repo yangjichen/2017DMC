@@ -1,0 +1,124 @@
+总结：
+note0   里面最后一个图想说明什么？
+	pid               22035
+	manufacturer       1067
+	group               533  我感觉像是不同种类的序列号？？？
+	content             548  容量
+	unit                  8  容量的单位
+	pharmForm           278  剂型?而且有缺失值？Identifies form of medicine (tablets, syrup, salve, ...)
+				 https://www.kohlpharma.com/de/import_arzneimittel/abkuerzungen 可以去查
+
+	genericProduct        2  仿制药是一种药物，其药物与最初开发，获得专利和创新的药物具有相同的化学物质。 原药专利到期后允许销售仿制药
+
+	salesIndex            4  配药规范代码??? 比例是0.5,0.01,0.038,0.44，但这个变量暂时看起来与order无关
+	category            409  有缺失值？？？主要商品类别
+	campaignIndex         3  有缺失值？？？Action label？？？缺失比例比较大
+	rrp                3289  参考售价
+
+
+	lineID             2756003
+	day                     92
+	pid                  21928
+	adFlag                   2  1代表有广告
+	availability             4  这4种分别是什么？？？四种数量很悬殊，
+				    Items with availability 4 rarely ordered—“out of stock”?
+	competitorPrice       4992  **有缺失值**
+	click                    2
+	basket                   2
+	order                    2
+	price                 7475
+	revenue               7520
+
+
+note1   里面revenue/price为什么会出现大于2的情况？
+
+note3	tab = table(train$adFlag, train$availability) 可以看到有广告的，ava1的比例更高
+	campaignIndex 缺失比例比较高
+	之后表格的对比只是随便看了下
+
+note4   非常重要,先把content里面的乘法拆开，然后将单位统一（相当于content和单位结合成新变量）：unified_ML	unified_G	unified_CM			unified_ST	unified_P
+
+note5	colSums(is.na(items)) / nrow(items)	这一行可以看NA值比例
+	测试集中competitorPrice这个变量也是有缺失
+
+
+note6	把c("click", "basket", "order", "revenue", "quantity") 作为预测值,但第一层只预测了order的值
+	两张表merge好之后，可以考虑把pid lineid删除  分为train和trainlabel两部分
+	**重点：# Convert categories to numbers**
+	**quantity是一个非常重要的量**
+	第一层预测出order的0-1值，然后第二层基于那些order为1的预测值，对quantity进行预测。第一层用了xgboost，第二层用了glm
+
+note7	把day这个变量拆成了 7，10，14，28，30
+
+note8	提到的模型有xgboost、HMM、RNN，
+	七天一个周期很明显
+	三张图：92天每天order量总和看起来每周一个周期、92天所有order订单的price均值、92天每天revenue的总和
+	所以这里把day_7作为一个变量加入进去，这样用xgboost做出来模型准确率0.718926694442875
+
+note10	不知道做了什么，写的不清楚
+
+note11	不知道做了什么，写的不清楚
+
+
+
+feature engineering
+
+1、时间划分周，月等
+2、单位统一，容量统一
+3、Price per unit, competitorPrice per unit, rrp per unit
+4、Grouped forms (from pharmForm)
+
+Encoding Categorical Features？？？如何去实现，onehot？Likelihood encoding？
+
+
+
+\begin{frame}{Important Features}
+  \begin{itemize}
+    \item Probability \texttt{order == 1} given current and previous
+      \texttt{pid}
+    \item Random effect encoding of day of week with nested \texttt{pid} 
+    \item Likelihood encoding (odds ratio) of \texttt{pid}
+    \item Probability of \texttt{pid} being ordered again
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{1st Layer}
+  Predict \texttt{order}, which is binary.
+  \begin{block}{Models}
+    \begin{itemize}
+      \item Conditional Random Field
+      \item Generalized Linear Model
+      \item \textcolor{lgray}{Gradient-boosted Machine}
+      \item Neural Network
+      \item Random Forests
+      \item XGBoost
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+
+\begin{frame}{2nd Layer}
+  Predict \texttt{revenue} with 1st layer predictions as additional features.
+  \begin{block}{Models}
+    \begin{itemize}
+      \item \textcolor{lgray}{Generalized Linear Model (Tweedie distribution)}
+      \item \textcolor{lgray}{Gradient-boosted Machine}
+      \item \textcolor{lgray}{Neural Network}
+      \item XGBoost
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{3rd Layer}
+  \begin{itemize}
+    \item Linear model for \texttt{revenue} based on 2nd layer models
+    \item Weights for top 2 XGBoost models
+    \item No other features included
+    \item Manually corrected \texttt{availability == 4} to 0 revenue
+    \item Estimated RMSE: 9.898
+  \end{itemize}
+\end{frame}
+
+\item Know how long models will take to tune and fit
+

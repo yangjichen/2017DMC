@@ -1,0 +1,100 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T, warning = F, message = F, tidy = T, comment = "", highlight = T, cache = T)
+```
+
+```{r library package}
+library(openxlsx)   #处理.xlsx文件的程序包
+library(stringr)   #处理字符串的程序包
+library(ggplot2)   #用于画图(数据可视化)的程序包
+library(dplyr)
+# library(e1071)
+library(rpart)
+library(caret)
+library(party)
+# library(tree)
+library(randomForest)
+# library(kknn)
+# library(gbm)
+library(MASS)
+library(stats)
+# library(pROC)
+library(class)
+library(adabag)
+# library(C50)
+library(xgboost)
+# library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
+```
+
+
+```{r load data}
+library(xgboost)
+library(stringr)
+
+setwd("/Users/jiahangxu/Courses/BigDataAnalysis/BigDataAnalysisPJ/DMC_2017_task/")
+# 读入数据
+orig_train = read.csv("train.csv", sep = '|')
+orig_items = read.csv("final_unif.csv", sep = ',')
+orig_class = read.csv("class.csv", sep = '|')
+```
+
+```{r}
+summary(orig_items)
+
+unique(orig_items$group)
+orig_items$group12 <- str_sub(orig_items$group,1,2)
+orig_items$group34 = str_sub(orig_items$group,3,4)
+
+sum1 <- summarize(group_by(orig_items, group12), n())
+```
+
+
+```{r}
+train = orig_train
+
+head(train)
+Pid = unique(train$pid)
+```
+
+```{r}
+competationPower = train$competitorPrice/train$price # >1,有竞争力；<1,无竞争力
+action = train$click*0.4 + train$basket*0.7 + train$order*1
+train = data.frame(train,competationPower,action)
+
+boxplot(train$competationPower)
+```
+
+```{r}
+train2 <- train[-c(2730677,2736581,2738958),]
+boxplot(train2$competationPower)
+```
+
+```{r}
+competationPower = train2$competationPower
+action = train2$action
+plot(competationPower, action)
+```
+
+```{r Day analysis}
+train_withoutNA = na.omit(train)
+sumDay <- summarize(group_by(train_withoutNA, day), n(), n_distinct(pid), mean(adFlag), 
+                    n_distinct(availability), mean(competationPower), mean(price), sum(order), mean(order))
+summary(sumDay)
+plot(sumDay$`mean(competationPower)`,sumDay$`mean(order)`)
+```
+
+```{r Availability analysis}
+sumAva <- summarize(group_by(train, availability), n(),  sum(click),sum(basket),sum(order) )
+summary(sumAva)
+train[(train$availability==4)&&(train$order==1)]
+```

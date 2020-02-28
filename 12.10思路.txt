@@ -1,0 +1,27 @@
+我阅读了所有github上面的队伍上传的东西，我们主要focus on https://github.com/jpzhangvincent/2017DMC 这一工作
+
+
+原比赛成绩衡量标准：Performance measurement is by accuracy
+
+我认为需要先去做一下的：1读数据(检查有无missing value) 2看一下原始数据统计量 3原始数据简单作图
+之后需要大量灵感去做的：如何去创造一些feature(基于对原始数据尽可能多的理解)
+
+以下大部分信息来自initial report:
+原始数据：90天的user action，目标是预测接下来30天的revenue，评判标准的loss_function是squared error，每行数据中含有action，revenue，day, adFlag, availability, price, competitorPrice
+
+feature engineering was the most important part of their strategy！
+
+别人思路：创造大量feature，然后用initial模型去选择重要的feature，然后Build an ensemble of models and refine initial model
+
+
+建议看看final report里面的部分，非常好
+重点：113种新feature，灵感来自于exploration analyse
+最终没有使用crossvalidation
+流程图应该非常关键，但我还没太看明白
+
+
+本周目标放在预处理和创造feature上面，模型下周再说，
+**不向别的组提供我们找到的参考信息，及之后我们去造了哪些feature**
+**模型作为下阶段的重点**
+**预处理和造feature需要每个人都参与，对数据要尽可能多的去深入了解**
+
